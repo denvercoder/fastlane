@@ -19,17 +19,6 @@ module Fastlane
         "XCODE_DERIVED_DATA_PATH"
       ].freeze
 
-
-
-
-
-
-
-
-
-
-      
-
       def self.run(params)
         # Stop if not executed by CI
         if !Helper.is_ci? && !params[:force]
@@ -40,31 +29,12 @@ module Fastlane
         # Print table
         FastlaneCore::PrintTable.print_values(
           config: params,
-          title: "Summary for Setup Jenkins Action"
+          title: "Summary for Setting fastlane output directory"
         )
 
-        # Keychain
-        if params[:unlock_keychain] && params[:keychain_path]
-          keychain_path = params[:keychain_path]
-          UI.message "Unlocking keychain: \"#{keychain_path}\"."
-          Actions::UnlockKeychainAction.run(
-            path: keychain_path,
-            password: params[:keychain_password],
-            add_to_search_list: params[:add_keychain_to_search_list],
-            set_default: params[:set_default_keychain]
-          )
-        end
-
-        # Code signing identity
-        if params[:set_code_signing_identity] && params[:code_signing_identity]
-          code_signing_identity = params[:code_signing_identity]
-          UI.message "Set code signing identity: \"#{code_signing_identity}\"."
-          ENV['GYM_CODE_SIGNING_IDENTITY'] = code_signing_identity
-        end
-
         # Set output directory
-        if params[:output_directory]
-          output_directory_path = File.expand_path(params[:output_directory])
+        if params[:set_fastlane_output_dir]
+          output_directory_path = File.expand_path(params[:set_fastlane_output_dir])
           UI.message "Set output directory path to: \"#{output_directory_path}\"."
           ENV['GYM_BUILD_PATH'] = output_directory_path
           ENV['GYM_OUTPUT_DIRECTORY'] = output_directory_path
@@ -97,13 +67,12 @@ module Fastlane
       #####################################################
 
       def self.description
-        "Setup xcodebuild, gym and scan for easier Jenkins integration"
+        "Set an output directory for build artifacts"
       end
 
       def self.details
         [
-          "- Adds and unlocks keychains from Jenkins 'Keychains and Provisioning Profiles Plugin'",
-          "- Sets code signing identity from Jenkins 'Keychains and Provisioning Profiles Plugin'",
+          "- Allows user to specify a preferred output directory",
           "- Sets output directory to './output' (gym, scan and backup_xcarchive).",
           "- Sets derived data path to './derivedData' (xcodebuild, gym, scan and clear_derived_data, carthage).",
           "- Produce result bundle (gym and scan).",
@@ -116,13 +85,6 @@ module Fastlane
 
       def self.available_options
         [
-          # General
-          FastlaneCore::ConfigItem.new(key: :force,
-                                       env_name: "FL_SETUP_JENKINS_FORCE",
-                                       description: "Force setup, even if not executed by Jenkins",
-                                       is_string: false,
-                                       default_value: false),
-
           # Keychain
           FastlaneCore::ConfigItem.new(key: :unlock_keychain,
                                        env_name: "FL_SETUP_JENKINS_UNLOCK_KEYCHAIN",
@@ -192,7 +154,7 @@ module Fastlane
 
       def self.example_code
         [
-          'setup_jenkins'
+          'set_fastlane_output_dir'
         ]
       end
 
