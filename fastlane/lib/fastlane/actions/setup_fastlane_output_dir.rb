@@ -19,13 +19,6 @@ module Fastlane
         "XCODE_DERIVED_DATA_PATH"
       ].freeze
 
-      def self.run(params)
-        # Stop if not executed by CI
-        if !Helper.is_ci? && !params[:force]
-          UI.important "Not executed by Continuous Integration system."
-          return
-        end
-
         # Print table
         FastlaneCore::PrintTable.print_values(
           config: params,
@@ -33,8 +26,8 @@ module Fastlane
         )
 
         # Set output directory
-        if params[:set_fastlane_output_dir]
-          output_directory_path = File.expand_path(params[:set_fastlane_output_dir])
+        if params[:fastlane_output_dir]
+          output_directory_path = File.expand_path(params[:fastlane_output_dir])
           UI.message "Set output directory path to: \"#{output_directory_path}\"."
           ENV['GYM_BUILD_PATH'] = output_directory_path
           ENV['GYM_OUTPUT_DIRECTORY'] = output_directory_path
@@ -77,67 +70,25 @@ module Fastlane
           "- Sets derived data path to './derivedData' (xcodebuild, gym, scan and clear_derived_data, carthage).",
           "- Produce result bundle (gym and scan).",
           "",
-          "This action helps with Jenkins integration. Creates own derived data for each job. All build results like IPA files and archives will be stored in the `./output` directory.",
-          "The action also works with [Keychains and Provisioning Profiles Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Keychains+and+Provisioning+Profiles+Plugin), selected keychain",
-          "will be automatically unlocked and the selected code signing identity will be used. By default this action will only work when fastlane is executed on a CI system."
+          "Creates own derived data for each job. All build results like IPA files and archives will be stored in the `./output` directory."
         ].join("\n")
       end
 
       def self.available_options
         [
-          # Keychain
-          FastlaneCore::ConfigItem.new(key: :unlock_keychain,
-                                       env_name: "FL_SETUP_JENKINS_UNLOCK_KEYCHAIN",
-                                       description: "Unlocks keychain",
-                                       is_string: false,
-                                       default_value: true),
-          FastlaneCore::ConfigItem.new(key: :add_keychain_to_search_list,
-                                       env_name: "FL_SETUP_JENKINS_ADD_KEYCHAIN_TO_SEARCH_LIST",
-                                       description: "Add to keychain search list",
-                                       is_string: false,
-                                       default_value: :replace),
-          FastlaneCore::ConfigItem.new(key: :set_default_keychain,
-                                       env_name: "FL_SETUP_JENKINS_SET_DEFAULT_KEYCHAIN",
-                                       description: "Set keychain as default",
-                                       is_string: false,
-                                       default_value: true),
-          FastlaneCore::ConfigItem.new(key: :keychain_path,
-                                       env_name: "KEYCHAIN_PATH",
-                                       description: "Path to keychain",
-                                       is_string: true,
-                                       optional: true),
-          FastlaneCore::ConfigItem.new(key: :keychain_password,
-                                       env_name: "KEYCHAIN_PASSWORD",
-                                       description: "Keychain password",
-                                       is_string: true,
-                                       sensitive: true,
-                                       default_value: ""),
-
-          # Code signing identity
-          FastlaneCore::ConfigItem.new(key: :set_code_signing_identity,
-                                       env_name: "FL_SETUP_JENKINS_SET_CODE_SIGNING_IDENTITY",
-                                       description: "Set code signing identity from CODE_SIGNING_IDENTITY environment",
-                                       is_string: false,
-                                       default_value: true),
-          FastlaneCore::ConfigItem.new(key: :code_signing_identity,
-                                       env_name: "CODE_SIGNING_IDENTITY",
-                                       description: "Code signing identity",
-                                       is_string: true,
-                                       optional: true),
-
           # Xcode parameters
-          FastlaneCore::ConfigItem.new(key: :output_directory,
-                                       env_name: "FL_SETUP_JENKINS_OUTPUT_DIRECTORY",
+          FastlaneCore::ConfigItem.new(key: :fastlane_output_dir,
+                                       env_name: "FL_SETUP_OUTPUT_DIR",
                                        description: "The directory in which the ipa file should be stored in",
                                        is_string: true,
                                        default_value: "./output"),
           FastlaneCore::ConfigItem.new(key: :derived_data_path,
-                                       env_name: "FL_SETUP_JENKINS_DERIVED_DATA_PATH",
+                                       env_name: "FL_SETUP_DERIVED_DATA_PATH",
                                        description: "The directory where built products and other derived data will go",
                                        is_string: true,
                                        default_value: "./derivedData"),
           FastlaneCore::ConfigItem.new(key: :result_bundle,
-                                       env_name: "FL_SETUP_JENKINS_RESULT_BUNDLE",
+                                       env_name: "FL_SETUP_RESULT_BUNDLE",
                                        description: "Produce the result bundle describing what occurred will be placed",
                                        is_string: false,
                                        default_value: true)
@@ -145,7 +96,7 @@ module Fastlane
       end
 
       def self.authors
-        ["bartoszj"]
+        ["bartoszj", "denvercoder"]
       end
 
       def self.is_supported?(platform)
